@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then echo "Bitte gofmt ausführen:"; echo "$unformatted"; exit 1; fi
+      - name: go vet (Linux, Windows, macOS)
+        run: |
+          go vet ./...
+          GOOS=windows GOARCH=amd64 go vet ./...
+          GOOS=darwin GOARCH=arm64 go vet ./...
+      - name: go test
+        run: go test -race ./...
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Web-Tests
+        run: node --test web/test/*.test.mjs
+      - name: Simulation (Selbsttest)
+        run: go run ./cmd/omnivector simulate --config "$RUNNER_TEMP/omnivector"
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - { goos: windows, goarch: amd64, ext: .exe }
+          - { goos: linux, goarch: amd64, ext: '' }
+          - { goos: linux, goarch: arm64, ext: '' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: '0'
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_SHA::7}" -o "dist/omnivector${{ matrix.ext }}" ./cmd/omnivector
+          cp README.md dist/
+          if [ "${{ matrix.goos }}" = "linux" ]; then cp packaging/linux/99-omnivector-uinput.rules dist/; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: omnivector-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/

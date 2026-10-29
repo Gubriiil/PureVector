@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OmniVector</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <img src="favicon.svg" alt="" width="30" height="30">
+        <div>
+          <h1>OmniVector</h1>
+          <small>Richtungsabhängige Sensitivität für jede Maus</small>
+        </div>
+      </div>
+      <span class="pill off" id="status-pill">Lädt …</span>
+      <label class="switch" title="OmniVector ein-/ausschalten">
+        <input type="checkbox" id="enabled-switch" aria-label="OmniVector aktiv">
+        <span class="track"></span>
+      </label>
+    </header>
+
+    <div id="backend-alert" class="alert hidden" role="status"></div>
+
+    <div class="grid mt">
+      <section class="card col-7" aria-labelledby="live-title">
+        <div class="card-head">
+          <h2 id="live-title">Live-Ansicht</h2>
+          <span class="muted" id="live-device">Keine Bewegung</span>
+        </div>
+        <svg id="live-radar" role="img" aria-label="Aktives Richtungsprofil"></svg>
+        <div class="legend">
+          <span><i class="sw-accent"></i>Sensitivität je Richtung</span>
+          <span><i class="sw-muted"></i>neutral (1,00×)</span>
+          <span><i class="sw-text"></i>aktuelle Bewegung</span>
+        </div>
+        <div class="kpis mt">
+          <div class="kpi"><b id="live-gain">1,00×</b><span>angewendeter Faktor</span></div>
+          <div class="kpi"><b id="live-dir">–</b><span>Bewegungsrichtung</span></div>
+          <div class="kpi"><b id="live-profile">–</b><span>Profil dieser Maus</span></div>
+        </div>
+      </section>
+
+      <section class="card col-5 stack" aria-labelledby="cal-title">
+        <div class="card-head"><h2 id="cal-title">Kalibrierung</h2></div>
+        <p class="muted">
+          Fünf kurze Runden à 60 Sekunden: Ziele erscheinen abwechselnd in der Mitte und in zufälliger Richtung.
+          OmniVector misst, in welche Richtungen du über- oder unterschießt, und gleicht die Sensitivität je Richtung an –
+          für jede angeschlossene Maus.
+        </p>
+        <ol class="steps">
+          <li><b>Messen</b><span>Zielübung im Browser, Rohdaten der Maus</span></li>
+          <li><b>Berechnen</b><span>Über-/Unterschießen je Richtung, statistisch abgesichert</span></li>
+          <li><b>Anpassen</b><span>jede Richtung landet wie deine stärkste</span></li>
+          <li><b>Anwenden</b><span>sofort für jede Maus – auf Treiberebene oder per Raw Accel</span></li>
+        </ol>
+        <a class="btn primary big" href="/calibrate" id="cal-button">Kalibrierung starten</a>
+        <div id="last-cal" class="muted"></div>
+        <p class="faint small">
+          Tipp: Spiele so wie im Spiel – schnell und natürlich, mit deiner normalen Haltung und Unterlage.
+        </p>
+      </section>
+
+      <section class="card col-12" aria-labelledby="dev-title">
+        <div class="card-head">
+          <h2 id="dev-title">Mäuse</h2>
+          <span class="muted" id="dev-count"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Gerät</th><th>Kennung</th><th>Status</th><th>Profil</th></tr></thead>
+            <tbody id="device-rows"><tr><td colspan="4" class="muted">Noch keine Maus erkannt – bewege die Maus.</td></tr></tbody>
+          </table>
+        </div>
+        <p class="faint small mt-s">
+          „Standard“ folgt dem Standardprofil. Für Touchpads, Tablets oder Zweitmäuse kannst du „neutral“ wählen.
+        </p>
+      </section>
+
+      <section class="card col-12" aria-labelledby="prof-title">
+        <div class="card-head">
+          <h2 id="prof-title">Profile</h2>
+          <label class="row muted small">Standardprofil
+            <select id="default-select" aria-label="Standardprofil"></select>
+          </label>
+        </div>
+        <div class="profiles" id="profile-list"></div>
+      </section>
+    </div>
+
+    <footer class="foot">
+      <span id="hotkey-hint"></span>
+      <span id="config-dir"></span>
+      <span id="version"></span>
+    </footer>
+  </div>
+
+  <div class="modal-back hidden" id="modal">
+    <div class="card modal stack" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="card-head"><h2 id="modal-title"></h2><button class="btn ghost" id="modal-close" aria-label="Schließen">✕</button></div>
+      <div id="modal-body" class="stack"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

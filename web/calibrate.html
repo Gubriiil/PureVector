@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OmniVector – Kalibrierung</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body class="game">
+  <canvas id="stage" aria-label="Zielübung"></canvas>
+
+  <div class="hud hidden" id="hud" aria-live="off">
+    <span>Runde <b id="hud-round">1/5</b></span>
+    <div class="bar"><div id="hud-bar"></div></div>
+    <span id="hud-time">60 s</span>
+    <span>Treffer <b id="hud-hits">0</b></span>
+    <span>Genauigkeit <b id="hud-acc">–</b></span>
+  </div>
+
+  <!-- 1. setup -->
+  <div class="overlay" id="ov-setup">
+    <form class="card stack" id="setup-form" autocomplete="off">
+      <div class="card-head">
+        <h1>Kalibrierung</h1>
+        <a class="btn ghost" href="/">← Dashboard</a>
+      </div>
+      <p class="muted">
+        Triff die Ziele so schnell und natürlich wie im Spiel. Sie erscheinen abwechselnd in der Mitte und in einer
+        zufälligen Richtung. Aus jeder schnellen Zielbewegung misst OmniVector, ob du in diese Richtung über- oder
+        unterschießt. Am Ende bekommst du ein Richtungsprofil, das genau das ausgleicht.
+      </p>
+      <div class="setup-grid">
+        <label class="field">Maus-DPI
+          <input type="number" id="f-dpi" min="100" max="64000" step="50" required>
+          <span class="hint">wie im Maus-Treiber eingestellt</span>
+        </label>
+        <label class="field">Spiel-Sensitivität (cm/360°)
+          <input type="number" id="f-cm360" min="5" max="200" step="0.5" required>
+          <span class="hint">Mausweg für eine volle Drehung; unbekannt → 40</span>
+        </label>
+        <label class="field">Sichtfeld (FOV)
+          <input type="number" id="f-fov" min="60" max="130" step="1" required>
+          <span class="hint">horizontal, z. B. 103 (Valorant), 106 (CS2)</span>
+        </label>
+        <label class="field">Dauer
+          <select id="f-preset">
+            <option value="3x45">3 × 45 s (schnell)</option>
+            <option value="5x60" selected>5 × 60 s (Standard)</option>
+            <option value="8x60">8 × 60 s (präzise)</option>
+          </select>
+        </label>
+        <label class="field">Richtungen
+          <select id="f-dirs">
+            <option value="8" selected>8 (wie PureVector)</option>
+            <option value="16">16 (feiner)</option>
+          </select>
+        </label>
+        <label class="field">Vollbild
+          <select id="f-fullscreen">
+            <option value="1" selected>ja (empfohlen)</option>
+            <option value="0">nein</option>
+          </select>
+        </label>
+      </div>
+      <fieldset id="mode-box">
+        <legend>Messart</legend>
+        <label class="choice"><input type="radio" name="mode" value="fresh" checked>
+          <span>Neu kalibrieren<small>Misst deine Rohbewegung – ein aktives Profil wird während der Messung pausiert.</small></span></label>
+        <label class="choice" id="refine-choice"><input type="radio" name="mode" value="refine">
+          <span>Verfeinern / prüfen<small id="refine-hint">Misst mit deinem aktiven Profil und korrigiert nur die verbleibende Abweichung.</small></span></label>
+      </fieldset>
+      <div id="setup-warn" class="alert warn hidden"></div>
+      <div class="row">
+        <span class="faint small">Esc pausiert. Linke Maustaste schießt.</span>
+        <span class="spacer"></span>
+        <button class="btn primary big" type="submit" id="start-btn">Start</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- 2. countdown -->
+  <div class="overlay hidden" id="ov-count"><div class="count-big" id="count-num">3</div></div>
+
+  <!-- 3. between rounds -->
+  <div class="overlay hidden" id="ov-between">
+    <div class="card stack">
+      <h2 id="between-title">Runde geschafft</h2>
+      <p class="muted" id="between-text"></p>
+      <p><b>Klicke, um weiterzumachen.</b> <span class="muted">Kurz lockern ist erlaubt.</span></p>
+    </div>
+  </div>
+
+  <!-- 4. pause -->
+  <div class="overlay hidden" id="ov-pause">
+    <div class="card stack">
+      <h2>Pausiert</h2>
+      <p class="muted">Die Runde wartet auf dich. Bereits gemessene Ziele bleiben erhalten.</p>
+      <div class="row">
+        <button class="btn primary" id="resume-btn">Fortsetzen</button>
+        <button class="btn" id="finish-early-btn">Jetzt auswerten</button>
+        <span class="spacer"></span>
+        <button class="btn danger" id="abort-btn">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. analysing -->
+  <div class="overlay hidden" id="ov-analyze">
+    <div class="card stack"><h2>Analysiere deine Zielbewegungen …</h2>
+      <p class="muted">Primärbewegungen werden erkannt, je Richtung ausgewertet und statistisch abgesichert.</p></div>
+  </div>
+
+  <!-- 6. results -->
+  <div class="overlay results hidden" id="ov-results">
+    <div class="card stack" id="results"></div>
+  </div>
+
+  <!-- 7. errors -->
+  <div class="overlay hidden" id="ov-error">
+    <div class="card stack">
+      <h2>Das hat nicht geklappt</h2>
+      <div class="alert error" id="error-text"></div>
+      <div class="row"><button class="btn primary" id="retry-btn">Nochmal</button><a class="btn" href="/">Dashboard</a></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/calibrate.js"></script>
+</body>
+</html>

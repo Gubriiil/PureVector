@@ -1,0 +1,4 @@
+# OmniVector: let members of the "input" group create virtual input devices
+# (needed to re-emit mouse events after the direction-dependent correction).
+# Install: sudo cp 99-omnivector-uinput.rules /etc/udev/rules.d/ && sudo udevadm control --reload
+KERNEL=="uinput", SUBSYSTEM=="misc", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"

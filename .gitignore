@@ -1,0 +1,9 @@
+# Build output
+/omnivector
+/omnivector.exe
+/dist/
+*.test
+*.out
+
+# Local runtime files (never commit the Interception DLL – users download it themselves)
+interception.dll
